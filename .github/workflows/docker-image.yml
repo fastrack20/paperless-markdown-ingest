@@ -43,7 +43,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=tag
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         if: github.event_name != 'pull_request'
         with:
           context: .
