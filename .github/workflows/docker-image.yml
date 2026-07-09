@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build test image
         run: docker build -t paperless-markdown-ingest:test .
@@ -34,7 +34,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/metadata-action@v5
+      - uses: docker/metadata-action@v6
         if: github.event_name != 'pull_request'
         id: meta
         with:
@@ -43,7 +43,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=tag
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         if: github.event_name != 'pull_request'
         with:
           context: .
