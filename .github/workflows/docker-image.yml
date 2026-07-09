@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 9 * * 0"
   workflow_dispatch:
 
 permissions:
@@ -17,13 +21,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Build test image
+        run: docker build -t paperless-markdown-ingest:test .
+
+      - name: Smoke test image
+        run: docker run --rm paperless-markdown-ingest:test python -m py_compile /app/app.py
+
       - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: docker/metadata-action@v5
+        if: github.event_name != 'pull_request'
         id: meta
         with:
           images: ghcr.io/fastrack20/paperless-markdown-ingest
@@ -32,6 +44,7 @@ jobs:
             type=ref,event=tag
 
       - uses: docker/build-push-action@v6
+        if: github.event_name != 'pull_request'
         with:
           context: .
           push: true
