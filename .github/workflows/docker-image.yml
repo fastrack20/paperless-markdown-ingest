@@ -27,7 +27,7 @@ jobs:
       - name: Smoke test image
         run: docker run --rm paperless-markdown-ingest:test python -m py_compile /app/app.py
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
