@@ -3,6 +3,9 @@ name: Auto-merge Dependabot
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -10,12 +13,37 @@ permissions:
 
 jobs:
   dependabot:
-    if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
 
     steps:
       - name: Enable auto-merge for Dependabot PR
-        run: gh pr merge --auto --squash "$PR_URL"
+        shell: bash
+        run: |
+          set -u
+
+          enable_auto_merge() {
+            local pr_url="$1"
+            echo "Requesting auto-merge for ${pr_url}"
+            gh pr merge --auto --squash "$pr_url" || true
+          }
+
+          if [ "$EVENT_NAME" = "pull_request_target" ]; then
+            if [ "$ACTOR" != "dependabot[bot]" ]; then
+              echo "Skipping non-Dependabot PR from ${ACTOR}"
+              exit 0
+            fi
+
+            enable_auto_merge "$PR_URL"
+            exit 0
+          fi
+
+          gh pr list --author "app/dependabot" --state open --json url --jq '.[].url' |
+            while read -r pr_url; do
+              [ -n "$pr_url" ] && enable_auto_merge "$pr_url"
+            done
         env:
+          ACTOR: ${{ github.actor }}
+          EVENT_NAME: ${{ github.event_name }}
+          GH_REPO: ${{ github.repository }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
