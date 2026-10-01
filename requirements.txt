@@ -1,2 +1,2 @@
-markitdown[all]==0.1.7
+markitdown[all]==0.1.8
 requests==2.34.2
